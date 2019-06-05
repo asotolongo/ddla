@@ -1,0 +1,85 @@
+ddla  extension
+======================================
+
+This PostgreSQL extension implements  a mecanism to log and show  all DDL operation about objects(tables, index, sequences, function, etc) : CREATE, DROP,ALTER, etc
+#required PG 9.6+
+
+IMPORTANT: There're bugs in the existing version, please contact to me.
+
+
+Building and install
+--------
+Run: make install 
+In postgresql execute: CREATE EXTENSION ddla ;
+
+
+--It create schema ddla
+              
+
+
+
+
+
+
+--FUNCTIONS:
+ddla.get_ddl_cmd_by_cmd (p_cmd) -- returns all DDL operations about command passed by parameters
+ddla.get_ddl_cmd_by_object_type ( p_obj) -- returns all DDL operations about object type passed by parameters
+ddla.get_ddl_cmd_by_ts (p_ts_start timestamp,p_ts_end timestamp) -- returns all DDL operations between timestamp passed by parameters
+ddla.get_ddl_cmd_by_user (p_username)  -- returns all DDL operations about user passed by parameters
+ddla.reset_logs() -- reset all DDL logs
+ddla.reset_id_seq_logs() -- reset all DDL logs and restart id of logs
+ddla.get_ddl_cmd_stats () -- return some staticts about de dll command register 
+
+
+
+Example of use
+-------
+select * from ddla.get_ddl_cmd_stats ();
+       cmd       | calls 
+-----------------+-------
+ ALTER TABLE     |     8
+ COMMENT         |     1
+ CREATE TABLE    |     8
+ CREATE FUNCTION |     2
+ CREATE SEQUENCE |     4
+ CREATE INDEX    |     6
+ ALTER SEQUENCE  |     4
+(7 filas)
+
+
+ select * from ddla.get_ddl_cmd_by_ts ('2019-06-05 11:28:17.5564','2019-06-05 11:28:18');
+  cmd     |       objs        | objs_types |           ts_ddl           | usrname  |    ip_add    |                                                      qry                                                       
+-------------+-------------------+------------+----------------------------+----------+--------------+----------------------------------------------------------------------------------------------------------------
+ ALTER TABLE | public.orders     | table      | 2019-06-05 11:28:17.5564   | postgres | 127.0.0.1/32 | ALTER TABLE ONLY orders                                                                                       +
+             |                   |            |                            |          |              |     ADD CONSTRAINT fk_customerid FOREIGN KEY (customerid) REFERENCES customers(customerid) ON DELETE SET NULL;
+ ALTER TABLE | public.orderlines | table      | 2019-06-05 11:28:17.563434 | postgres | 127.0.0.1/32 | ALTER TABLE ONLY orderlines                                                                                   +
+             |                   |            |                            |          |              |     ADD CONSTRAINT fk_orderid FOREIGN KEY (orderid) REFERENCES orders(orderid) ON DELETE CASCADE;
+(2 filas)
+
+
+ddla=# select * from ddla.get_ddl_cmd_by_object_type ( 'index') limit 2; 
+              objs              |     cmmd     |           ts_ddl           | usrname  |    ip_add    |                                     qry                                     
+--------------------------------+--------------+----------------------------+----------+--------------+-----------------------------------------------------------------------------
+ public.ix_cust_hist_customerid | CREATE INDEX | 2019-06-05 11:28:17.324218 | postgres | 127.0.0.1/32 | CREATE INDEX ix_cust_hist_customerid ON cust_hist USING btree (customerid);
+ public.ix_cust_username        | CREATE INDEX | 2019-06-05 11:28:17.382627 | postgres | 127.0.0.1/32 | CREATE UNIQUE INDEX ix_cust_username ON customers USING btree (username);
+(2 filas)
+
+
+ddla=# select * from ddla.get_ddl_cmd_by_cmd ('CREATE TABLE') limit 2; 
+       objs        | objs_types |           ts_ddl           | usrname  |    ip_add    |                       qry                       
+-------------------+------------+----------------------------+----------+--------------+-------------------------------------------------
+ public.categories | table      | 2019-06-05 11:28:16.940983 | postgres | 127.0.0.1/32 | CREATE TABLE categories (                      +
+                   |            |                            |          |              |     category serial NOT NULL,                  +
+                   |            |                            |          |              |     categoryname character varying(50) NOT NULL+
+                   |            |                            |          |              | );
+ public.cust_hist  | table      | 2019-06-05 11:28:16.947531 | postgres | 127.0.0.1/32 | CREATE TABLE cust_hist (                       +
+                   |            |                            |          |              |     customerid integer NOT NULL,               +
+                   |            |                            |          |              |     orderid integer NOT NULL,                  +
+                   |            |                            |          |              |     prod_id integer NOT NULL                   +
+                   |            |                            |          |              | );
+(2 filas)
+
+
+Anthony R. Sotolongo leon
+asotolongo@gmail.com
+
