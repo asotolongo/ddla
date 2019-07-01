@@ -123,5 +123,13 @@ end;
 $$
 language plpgsql;
 
+
+GRANT USAGE ON SCHEMA ddla TO public;
+GRANT ALL ON SEQUENCE ddla.ddl_logs_i_seq TO public;
+GRANT INSERT ON TABLE ddla.ddl_logs TO public;
+
+
 select ddla.reset_id_seq_logs();
+
+
 

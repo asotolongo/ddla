@@ -2,5 +2,5 @@
 comment = 'Extension to logs DDL changes '
 default_version = '0.1'
 relocatable = true
-superuser = false
+superuser = true
 
